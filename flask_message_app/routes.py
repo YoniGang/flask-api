@@ -1,3 +1,4 @@
+import logging
 from flask import request, jsonify
 from flask_message_app import app, db
 from flask_message_app.models import Message
