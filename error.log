@@ -6,3 +6,4 @@
  * Debugger is active!
  * Debugger PIN: 321-649-007
  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+127.0.0.1 - - [05/Jun/2020 00:12:23] "[37mGET /message/all_messages/Yoniy HTTP/1.1[0m" 200 -
