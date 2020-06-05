@@ -1,7 +1,7 @@
 import logging
 from flask import request, jsonify
 from flask_message_app import app, db
-from flask_message_app.models import Message
+from flask_message_app.models import Message, User
 import werkzeug
 import flask_message_app.status_codes as status
 # from flask_login import login_user, current_user, logout_user, login_required
@@ -13,7 +13,12 @@ db.create_all()
 
 def get_messages(unread, receiver):
     try:
-        messages = Message.query.filter_by(read=False, receiver=receiver).all() if unread == True else Message.query.filter_by(receiver=receiver).all()
+        receiver_user = User.query.filter_by(username=receiver).first()
+        #check if user exist
+        if receiver_user is None:
+            return jsonify({'Error': 'User ' + receiver + ' does not exist'}), status.BAD_REQUEST
+        #check if return all messages or only unread messages
+        messages = receiver_user.messages if unread == False else [msg for msg in receiver_user.messages if msg.read==False]
         if len(messages) == 0:
             #If we are reading all messages or only unread
             if not unread:
@@ -24,6 +29,7 @@ def get_messages(unread, receiver):
             msg.read = True
         db.session.commit()
         return jsonify([l.json_repr() for l in messages]), status.OK
+        # return str(messages)
             
     except Exception as e:
         return jsonify({'exception type': str(type(e).__name__), 'exception message': str(e)}), status.BAD_REQUEST 
@@ -42,7 +48,8 @@ def new_message():
     if request.is_json:
         try:
             content = request.get_json()
-            message = Message(sender=content['sender'], receiver=content['receiver'], message=content['message'], subject=content['subject'])
+            receiver = User.query.filter_by(username=content['receiver']).first()
+            message = Message(sender=content['sender'], receiver=receiver, message=content['message'], subject=content['subject'])
             db.session.add(message)
             db.session.commit()
             return jsonify({'Success': 'Message added'}), status.CREATED
@@ -50,7 +57,7 @@ def new_message():
             return jsonify({'exception type': str(type(e).__name__), 'exception message': str(e)}), status.BAD_REQUEST
 
     else:
-        return jsonify({'error': 'Bad Request'}), status.BAD_REQUEST
+        return jsonify({'error': 'Request does not contain a json'}), status.BAD_REQUEST
     
 
 @app.route("/message/all_messages/<receiver>", methods=['GET'])
@@ -91,3 +98,29 @@ def delete_message(id):
         return jsonify({'Error': 'Message not found'}), status.NOT_FOUND
     except Exception as e:
         return jsonify({'exception type': str(type(e).__name__), 'exception message': str(e)}), status.BAD_REQUEST
+
+
+# =============================================================================
+############### For development env!!!######################
+# =============================================================================
+# @app.route("/message/delete_all_messages", methods=['DELETE', 'POST'])
+# def delete_all_messages():
+#     try:
+#         message = Message.query.all()
+#         for msg in message:
+#             db.session.delete(msg)
+#         db.session.commit()
+#         return jsonify({'Success': 'All messages deleted'}), status.OK
+#     except Exception as e:
+#         return jsonify({'exception type': str(type(e).__name__), 'exception message': str(e)}), status.BAD_REQUEST
+    
+# @app.route("/message/delete_all_users", methods=['DELETE', 'POST'])
+# def delete_all_users():
+#     try:
+#         users = User.query.all()
+#         for user in users:
+#             db.session.delete(user)
+#         db.session.commit()
+#         return jsonify({'Success': 'All users deleted'}), status.OK
+#     except Exception as e:
+#         return jsonify({'exception type': str(type(e).__name__), 'exception message': str(e)}), status.BAD_REQUEST

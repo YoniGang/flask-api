@@ -8,15 +8,17 @@ from flask_message_app import db#, login_manager
 #     return User.query.get(int(user_id))
 
 
-# class User(db.Model, UserMixin):
-#     id = db.Column(db.Integer, primary_key=True)
-#     username = db.Column(db.String(20), unique=True, nullable=False)
-#     email = db.Column(db.String(120), unique=True, nullable=False)
-#     password = db.Column(db.String(60), nullable=False)
-#     messages = db.relationship('Message', backref='receiver', lazy=True)
+class User(db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(60), nullable=False)
+    messages = db.relationship('Message', backref='receiver', lazy=True)
 
-#     def __repr__(self):
-#         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
+    def __repr__(self):
+        return f"User('{self.username}', '{self.email}', '{self.image_file}')"
 
 
 class Message(db.Model):
@@ -24,7 +26,7 @@ class Message(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     sender = db.Column(db.String(20), nullable=False)
-    receiver = db.Column(db.String(20), nullable=False)
+    user_id = db.Column(db.String(20), db.ForeignKey('users.id'), nullable=False)
     message = db.Column(db.Text, nullable=False)
     subject = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, nullable=False, default = False)
@@ -37,7 +39,7 @@ class Message(db.Model):
         json_msg = {}
         json_msg['id'] = self.id
         json_msg['sender'] = self.sender
-        json_msg['receiver'] = self.receiver
+        json_msg['receiver'] = self.receiver.username
         json_msg['message'] = self.message
         json_msg['subject'] = self.subject
         json_msg['read'] = self.read

@@ -18,6 +18,7 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.DEBUG)
 log.addHandler(handler)
 
-from flask_message_app import routes
+from flask_message_app.routes import messages
+from flask_message_app.routes import users
 
     
