@@ -1,14 +1,14 @@
 from datetime import datetime
-from flask_message_app import db#, login_manager
-# from flask_login import UserMixin
+from flask_message_app import db, login_manager
+from flask_login import UserMixin
 
 
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.query.get(int(user_id))
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -19,6 +19,14 @@ class User(db.Model):
 
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
+    
+    
+    def json_repr(self):
+        json_user = {}
+        json_user['username'] = self.username
+        json_user['email'] = self.email
+        
+        return json_user
 
 
 class Message(db.Model):
@@ -26,7 +34,7 @@ class Message(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     sender = db.Column(db.String(20), nullable=False)
-    user_id = db.Column(db.String(20), db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message = db.Column(db.Text, nullable=False)
     subject = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, nullable=False, default = False)
